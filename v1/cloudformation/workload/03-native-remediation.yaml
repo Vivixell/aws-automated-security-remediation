@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 public-read ConfigRule with native SSM auto-remediation (Workload account)
+
+Parameters:
+  ConfigRuleName:
+    Type: String
+    Default: s3-bucket-public-read-prohibited
+
+  MaximumAutomaticAttempts:
+    Type: Number
+    Default: 3
+    Description: Number of retries before Config gives up remediating
+
+  RetryAttemptSeconds:
+    Type: Number
+    Default: 60
+    Description: Seconds between retry attempts
+
+Resources:
+  S3PublicReadRule:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: !Ref ConfigRuleName
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_PUBLIC_READ_PROHIBITED
+
+  S3Remediation:
+    Type: AWS::Config::RemediationConfiguration
+    Properties:
+      ConfigRuleName: !Ref S3PublicReadRule
+      TargetType: SSM_DOCUMENT
+      TargetId: AWS-DisableS3BucketPublicReadWrite
+      Automatic: true
+      MaximumAutomaticAttempts: !Ref MaximumAutomaticAttempts
+      RetryAttemptSeconds: !Ref RetryAttemptSeconds
+      Parameters:
+        BucketName:
+          ResourceValue:
+            Value: RESOURCE_ID
+        AutomationAssumeRole:
+          StaticValue:
+            Values:
+              - !ImportValue workload-ssm-remediation-role-arn
