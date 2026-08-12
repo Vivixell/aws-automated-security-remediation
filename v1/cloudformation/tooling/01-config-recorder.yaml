@@ -68,7 +68,6 @@ Resources:
     Type: AWS::Config::DeliveryChannel
     DependsOn: 
      - ConfigBucketPolicy
-     - ConfigRecorder
     Properties:
       Name: default
       S3BucketName: !Ref ConfigBucket
