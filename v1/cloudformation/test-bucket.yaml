@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Test bucket for S3 public-access remediation validation
+
+Resources:
+  TestBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'test-${AWS::Region}-${AWS::AccountId}'
+
+Outputs:
+  BucketName:
+    Value: !Ref TestBucket
