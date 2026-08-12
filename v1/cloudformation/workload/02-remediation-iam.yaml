@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IAM role assumed by SSM Automation for S3 remediation (Workload account)
+
+Parameters:
+  SSMRemediationRoleName:
+    Type: String
+    Default: ssm-s3-remediation-role
+    Description: IAM role name assumed by the SSM Automation document
+
+Resources:
+  SSMRemediationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref SSMRemediationRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ssm.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: s3-public-access-remediation
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketAcl
+                  - s3:PutBucketAcl
+                  - s3:GetBucketPolicy
+                  - s3:PutBucketPolicy
+                  - s3:GetBucketPolicyStatus
+                  - s3:GetBucketPublicAccessBlock
+                  - s3:PutBucketPublicAccessBlock
+                Resource: '*'
+
+Outputs:
+  SSMRemediationRoleArn:
+    Value: !GetAtt SSMRemediationRole.Arn
+    Export:
+      Name: workload-ssm-remediation-role-arn
