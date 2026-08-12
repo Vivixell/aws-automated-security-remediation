@@ -11,7 +11,7 @@ Resources:
   ConfigBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !sub config-bucket-${AWS::Region}-${AWS::AccountId}
+      BucketName: !Sub 'config-bucket-${AWS::Region}-${AWS::AccountId}'
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -66,7 +66,9 @@ Resources:
 
   DeliveryChannel:
     Type: AWS::Config::DeliveryChannel
-    DependsOn: ConfigBucketPolicy
+    DependsOn: 
+     - ConfigBucketPolicy
+     - ConfigRecorder
     Properties:
       Name: default
       S3BucketName: !Ref ConfigBucket
