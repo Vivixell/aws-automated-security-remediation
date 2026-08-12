@@ -11,7 +11,7 @@ Resources:
   ConfigBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub config-bucket-${AWS::Region}-${AWS::AccountId}
+      BucketName: !Sub 'config-bucket-${AWS::Region}-${AWS::AccountId}'
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
