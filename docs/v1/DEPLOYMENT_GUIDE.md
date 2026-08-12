@@ -7,21 +7,40 @@
 
 ## Workload account (native path) — deploy in order
 
-1. `v1/cloudformation/workload/01-config-recorder.yaml` 
-2. `v1/cloudformation/workload/02-remediation-iam.yaml`
-3. `v1/cloudformation/workload/03-native-remediation.yaml`
+1. **`v1/cloudformation/workload/01-config-recorder.yaml`** 
+
+- **stack name suggestion:**  `workload-config-recorder`
+
+2. **`v1/cloudformation/workload/02-remediation-iam.yaml`**
+
+- **stack name suggestion:**  `workload-remediation-iam`
+
+3. **`v1/cloudformation/workload/03-native-remediation.yaml`**
+
+- **stack name suggestion:**  `workload-native-remediation`
 
 ## Tooling account (custom path) — deploy in order
 
-1. `v1/cloudformation/tooling/01-config-recorder.yaml` 
-2. `v1/cloudformation/tooling/02-remediation-iam.yaml`
-3. `v1/cloudformation/tooling/03-custom-remediation.yaml`
+1. **`v1/cloudformation/tooling/01-config-recorder.yaml`**
 
-## Validation (console, both accounts)
+- **stack name suggestion:**  `tooling-config-recorder`
+
+2. **`v1/cloudformation/tooling/02-remediation-iam.yaml`**
+
+- **stack name suggestion:**  `tooling-remediation-iam`
+
+3. **`v1/cloudformation/tooling/03-custom-remediation.yaml`**
+
+- **stack name suggestion:**  `tooling-custom-remediation`
+
+## Validation (Both accounts)
 
 In each account:
 
-1. Create a test S3 bucket, use the `[v1/cloudformation/test-bucket.yaml]()` cloudformation bucket stack.
+1. Create a test S3 bucket, use the `v1/cloudformation/test-bucket.yaml` cloudformation stack file.
+
+- **stack name suggestion:** `security-remediation-test-bucket`
+
 2. Under Permissions, uncheck "Block all public access"
 3. Attach a public-read bucket policy
 4. Wait ~5 minutes for the Config recorder to detect the change
