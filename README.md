@@ -30,4 +30,4 @@ automated-security-remediation/
             └── index.py
 ```
 
-`index.py` sits alongside the Tooling stack as a readable copy of the remediation logic — the actual deployed source is the inline `ZipFile` block inside `03-custom-remediation.yaml`. If you change the remediation logic, update both.
+`index.py` sits alongside the Tooling stack as a readable copy of the remediation logic — the actual deployed source is the inline `ZipFile` block inside `03-custom-remediation.yaml`.
