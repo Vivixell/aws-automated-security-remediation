@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Config recorder and delivery channel (Workload account)
+Description: Config recorder and delivery channel (Tooling account)
 
 Parameters:
   ConfigRoleName:
@@ -28,13 +28,15 @@ Resources:
           - Sid: AWSConfigBucketPermissionsCheck
             Effect: Allow
             Principal:
-              Service: config.amazonaws.com
+              # Changed from Service to the Custom IAM Role ARN
+              AWS: !GetAtt ConfigRecorderRole.Arn
             Action: s3:GetBucketAcl
             Resource: !GetAtt ConfigBucket.Arn
           - Sid: AWSConfigBucketDelivery
             Effect: Allow
             Principal:
-              Service: config.amazonaws.com
+              # Changed from Service to the Custom IAM Role ARN
+              AWS: !GetAtt ConfigRecorderRole.Arn
             Action: s3:PutObject
             Resource: !Sub '${ConfigBucket.Arn}/AWSLogs/${AWS::AccountId}/Config/*'
             Condition:
@@ -54,6 +56,21 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWS_ConfigRole
+      # Added explicit inline S3 permissions to pass Config's role validation
+      Policies:
+        - PolicyName: ConfigS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetBucketAcl
+                Resource: !GetAtt ConfigBucket.Arn
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub '${ConfigBucket.Arn}/AWSLogs/${AWS::AccountId}/Config/*'
+                Condition:
+                  StringEquals:
+                    s3:x-amz-acl: bucket-owner-full-control
 
   ConfigRecorder:
     Type: AWS::Config::ConfigurationRecorder
@@ -72,9 +89,3 @@ Resources:
     Properties:
       Name: default
       S3BucketName: !Ref ConfigBucket
-
-Outputs:
-  ConfigRecorderRoleArn:
-    Value: !GetAtt ConfigRecorderRole.Arn
-    Export:
-      Name: workload-config-recorder-role-arn
