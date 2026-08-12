@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 public-read ConfigRule with custom EventBridge + Lambda remediation (Tooling account)
+
+Parameters:
+  ConfigRuleName:
+    Type: String
+    Default: s3-bucket-public-read-prohibited
+
+  LambdaFunctionName:
+    Type: String
+    Default: s3-custom-remediation
+
+Resources:
+  S3PublicReadRule:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: !Ref ConfigRuleName
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_PUBLIC_READ_PROHIBITED
+
+  CustomRemediationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref LambdaFunctionName
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !ImportValue tooling-lambda-remediation-role-arn
+      Timeout: 30
+      Code:
+        ZipFile: |
+          import boto3
+
+          s3 = boto3.client('s3')
+
+
+          def handler(event, context):
+              detail = event.get('detail', {})
+              bucket_name = detail.get('resourceId')
+
+              print(f"Received non-compliant bucket: {bucket_name}")
+
+              if not bucket_name:
+                  print("No resourceId found in event detail, skipping")
+                  return {'status': 'skipped'}
+
+              s3.put_public_access_block(
+                  Bucket=bucket_name,
+                  PublicAccessBlockConfiguration={
+                      'BlockPublicAcls': True,
+                      'IgnorePublicAcls': True,
+                      'BlockPublicPolicy': True,
+                      'RestrictPublicBuckets': True,
+                  },
+              )
+
+              print(f"Re-locked public access block on {bucket_name}")
+              return {'status': 'remediated', 'bucket': bucket_name}
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CustomRemediationLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ConfigRemediationEventRule.Arn
+
+  ConfigRemediationEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: config-noncompliant-to-lambda
+      EventPattern:
+        source:
+          - aws.config
+        detail-type:
+          - Config Rules Compliance Change
+        detail:
+          messageType:
+            - ComplianceChangeNotification
+          configRuleName:
+            - !Ref ConfigRuleName
+          newEvaluationResult:
+            complianceType:
+              - NON_COMPLIANT
+      Targets:
+        - Arn: !GetAtt CustomRemediationLambda.Arn
+          Id: LambdaTarget
